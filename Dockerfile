@@ -1,6 +1,6 @@
 # ffmpeg
 #
-# VERSION               2.7.1-1
+# VERSION               2.7.1-2
 #
 # From https://trac.ffmpeg.org/wiki/CompilationGuide/Centos
 #
@@ -9,32 +9,29 @@ MAINTAINER    Julien Rottenberg <julien@rottenberg.info>
 
 
 
-
-
-ENV           FFMPEG_VERSION  2.7.1
-ENV           MPLAYER_VERSION 1.1.1
-ENV           YASM_VERSION    1.3.0
-ENV           OGG_VERSION     1.3.2
-ENV           VORBIS_VERSION  1.3.4
-ENV           LAME_VERSION    3.99.5
-ENV           FAAC_VERSION    1.28
-ENV           XVID_VERSION    1.3.3
-ENV           FDKAAC_VERSION  0.1.3
-ENV           SRC             /usr/local
-ENV           LD_LIBRARY_PATH ${SRC}/lib
-ENV           PKG_CONFIG_PATH ${SRC}/lib/pkgconfig
+ENV         FFMPEG_VERSION=2.7.7 \
+            FAAC_VERSION=1.28    \
+            FDKAAC_VERSION=0.1.4 \
+            LAME_VERSION=3.99.5  \
+            OGG_VERSION=1.3.2    \
+            OPUS_VERSION=1.1.1   \
+            THEORA_VERSION=1.1.1 \
+            YASM_VERSION=1.3.0   \
+            VORBIS_VERSION=1.3.5 \
+            VPX_VERSION=1.3.0    \
+            XVID_VERSION=1.3.4   \
+            X265_VERSION=1.9     \
+            SRC=/usr/local       \
+            PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
 
 
 COPY          run.sh /tmp/run.sh
 
 # See https://github.com/jrottenberg/ffmpeg/blob/master/run.sh
-RUN           bash /tmp/run.sh
+RUN           bash /tmp/run.sh && ffmpeg -buildconf
 
-# Let's make sure the app built correctly
-RUN           ffmpeg -buildconf 
-
-WORKDIR /tmp/workdir
+WORKDIR       /tmp/workdir
 
 CMD           ["--help"]
 ENTRYPOINT    ["ffmpeg"]

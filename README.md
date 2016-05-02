@@ -12,7 +12,7 @@ Test
 
 ```
 $ docker run jrottenberg/ffmpeg
-ffmpeg version 2.4.6 Copyright (c) 2000-2015 the FFmpeg developers
+ffmpeg version 2.7.1 Copyright (c) 2000-2015 the FFmpeg developers
   built on Mar  2 2015 10:45:40 with gcc 4.4.7 (GCC) 20120313 (Red Hat 4.4.7-11)
   configuration: --prefix=/usr/local --extra-cflags=-I/usr/local/include --extra-ldflags=-L/usr/local/lib --bindir=/usr/local/bin --extra-libs=-ldl --enable-version3 --enable-libfaac --enable-libmp3lame --enable-libx264 --enable-libx265 --enable-libxvid --enable-gpl --enable-postproc --enable-nonfree --enable-avresample --enable-libfdk_aac --disable-debug --enable-small
   libavutil      54.  7.100 / 54.  7.100
