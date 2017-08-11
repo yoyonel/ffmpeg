@@ -1,10 +1,14 @@
 # ffmpeg - http://ffmpeg.org/download.html
 #
+# From https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
+#
 # https://hub.docker.com/r/jrottenberg/ffmpeg/
 #
 #
-FROM        alpine:3.4
-MAINTAINER  Julien Rottenberg <julien@rottenberg.info>
+# FROM        nvidia/cuda
+# MAINTAINER  Julien Rottenberg <julien@rottenberg.info>
+
+FROM latty/screenpulse/fft_scipy_opencv
 
 
 CMD         ["--help"]
@@ -12,7 +16,7 @@ ENTRYPOINT  ["ffmpeg"]
 WORKDIR     /tmp/workdir
 
 
-ENV         FFMPEG_VERSION=3.1.10     \
+ENV         FFMPEG_VERSION=3.3.2     \
             FDKAAC_VERSION=0.1.5      \
             LAME_VERSION=3.99.5       \
             OGG_VERSION=1.3.2         \
@@ -39,25 +43,26 @@ ARG         FREETYPE_SHA256SUM="5d03dd76c2171a7601e9ce10551d52d4471cf92cd205948e
 ARG         LIBVIDSTAB_SHA256SUM="14d2a053e56edad4f397be0cb3ef8eb1ec3150404ce99a426c4eb641861dc0bb  v1.1.0.tar.gz"
 
 
-RUN     buildDeps="autoconf \
-                   automake \
-                   bash \
-                   binutils \
-                   bzip2 \
-                   cmake \
-                   curl \
-                   coreutils \
-                   g++ \
-                   gcc \
-                   libtool \
-                   make \
-                   python \
-                   openssl-dev \
-                   tar \
-                   yasm \
-                   zlib-dev" && \
-        export MAKEFLAGS="-j$(($(grep -c ^processor /proc/cpuinfo) + 1))" && \
-        apk  add --update ${buildDeps} libgcc libstdc++ ca-certificates libgomp && \
+RUN      buildDeps="autoconf \
+                    automake \
+                    cmake \
+                    curl \
+                    bzip2 \
+                    g++ \
+                    gcc \
+                    git \
+                    libtool \
+                    make \
+                    nasm \
+                    perl \
+                    pkg-config \
+                    python \
+                    libssl-dev \
+                    yasm \
+                    zlib1g-dev" && \
+        export MAKEFLAGS="-j$(($(nproc) + 1))" && \
+        apt-get -yqq update && \
+        apt-get install -yq --no-install-recommends ${buildDeps} ca-certificates libgomp1 && \
 #RUN  \
 ## opencore-amr https://sourceforge.net/projects/opencore-amr/
         DIR=$(mktemp -d) && cd ${DIR} && \
@@ -188,8 +193,10 @@ RUN     buildDeps="autoconf \
         cmake . && \
         make && \
         make install && \
-        rm -rf ${DIR} && \
-#RUN  \
+        rm -rf ${DIR}
+
+# git clone -b release/3.3 --single-branch https://github.com/FFmpeg/FFmpeg.git . \
+RUN  \
 ## ffmpeg https://ffmpeg.org/
         DIR=$(mktemp -d) && cd ${DIR} && \
         curl -sLO https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz && \
@@ -221,9 +228,13 @@ RUN     buildDeps="autoconf \
         --enable-shared \
         --enable-small \
         --enable-version3 \
+        --enable-swscale \
         --extra-cflags="-I${SRC}/include" \
         --extra-ldflags="-L${SRC}/lib" \
         --extra-libs=-ldl \
+        --enable-cuda --enable-cuvid --enable-nvenc --enable-nonfree --enable-libnpp \
+        --extra-cflags=-I/usr/local/cuda/include --extra-ldflags=-L/usr/local/cuda/lib64 \
+        --enable-pic \
         --prefix="${SRC}" && \
         make && \
         make install && \
@@ -231,13 +242,21 @@ RUN     buildDeps="autoconf \
         hash -r && \
         cd tools && \
         make qt-faststart && \
-        cp qt-faststart ${SRC}/bin && \
-        rm -rf ${DIR} && \
+        cp qt-faststart ${SRC}/bin 
+        # && \
 
-# cleanup
-        cd && \
-        apk del ${buildDeps} && \
-	rm -rf /var/cache/apk/* /usr/local/include && \
+# RUN \
+#         rm -rf ${DIR} && \
+# ## cleanup
+#         cd && \
+#         apt-get purge -y ${buildDeps} && \
+#         apt-get autoremove -y && \
+#         apt-get clean -y && \
+#         rm -rf /var/lib/apt/lists 
+#         # && \
+
+RUN \
+        ldconfig && \
         ffmpeg -buildconf
 
 # Let's make sure the app built correctly

@@ -8,8 +8,8 @@ import urllib2
 from distutils.version import StrictVersion
 
 MIN_VERSION='2.8'
-VARIANTS = ['ubuntu', 'alpine', 'centos']
-FFMPEG_RELEASES='https://ffmpeg.org/releases/'
+VARIANTS = ['ubuntu', 'alpine', 'centos', 'cuda']
+FFMPEG_RELEASES='http://ffmpeg.org/releases/'
 
 travis = []
 response = urllib2.urlopen(FFMPEG_RELEASES)
@@ -20,7 +20,6 @@ all_versions = parse_re.findall(ffmpeg_releases)
 all_versions.sort(key=StrictVersion, reverse=True)
 
 version, all_versions = all_versions[0], all_versions[1:]
-
 
 # # offline mode
 # version = '3.2.1'
@@ -64,6 +63,7 @@ for version in keep_version:
         docker_content = docker_content.replace('%%RUN%%', run_content)
 
         d = os.path.dirname(dockerfile)
+        print("d: {}".format(d))
         if not os.path.exists(dockerfile):
             os.makedirs(d)
 

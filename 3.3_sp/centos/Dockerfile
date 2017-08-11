@@ -1,9 +1,11 @@
 # ffmpeg - http://ffmpeg.org/download.html
 #
+# From https://trac.ffmpeg.org/wiki/CompilationGuide/Centos
+#
 # https://hub.docker.com/r/jrottenberg/ffmpeg/
 #
 #
-FROM        alpine:3.4
+FROM        centos:7
 MAINTAINER  Julien Rottenberg <julien@rottenberg.info>
 
 
@@ -12,7 +14,7 @@ ENTRYPOINT  ["ffmpeg"]
 WORKDIR     /tmp/workdir
 
 
-ENV         FFMPEG_VERSION=3.1.10     \
+ENV         FFMPEG_VERSION=3.3.2     \
             FDKAAC_VERSION=0.1.5      \
             LAME_VERSION=3.99.5       \
             OGG_VERSION=1.3.2         \
@@ -41,23 +43,24 @@ ARG         LIBVIDSTAB_SHA256SUM="14d2a053e56edad4f397be0cb3ef8eb1ec3150404ce99a
 
 RUN     buildDeps="autoconf \
                    automake \
-                   bash \
-                   binutils \
                    bzip2 \
                    cmake \
-                   curl \
-                   coreutils \
-                   g++ \
                    gcc \
+                   gcc-c++ \
+                   git \
                    libtool \
                    make \
-                   python \
-                   openssl-dev \
+                   nasm \
+                   perl \
+                   openssl-devel \
                    tar \
                    yasm \
-                   zlib-dev" && \
-        export MAKEFLAGS="-j$(($(grep -c ^processor /proc/cpuinfo) + 1))" && \
-        apk  add --update ${buildDeps} libgcc libstdc++ ca-certificates libgomp && \
+                   which \
+                   zlib-devel" && \
+        export MAKEFLAGS="-j$(($(nproc) + 1))" && \
+        echo "${SRC}/lib" > /etc/ld.so.conf.d/libc.conf && \
+        yum --enablerepo=extras install -y epel-release libgomp && \
+        yum install -y ${buildDeps} libgomp1 && \
 #RUN  \
 ## opencore-amr https://sourceforge.net/projects/opencore-amr/
         DIR=$(mktemp -d) && cd ${DIR} && \
@@ -236,8 +239,8 @@ RUN     buildDeps="autoconf \
 
 # cleanup
         cd && \
-        apk del ${buildDeps} && \
-	rm -rf /var/cache/apk/* /usr/local/include && \
+        yum history -y undo last && yum clean all && \
+        rm -rf /var/lib/yum/* && \
         ffmpeg -buildconf
 
 # Let's make sure the app built correctly
