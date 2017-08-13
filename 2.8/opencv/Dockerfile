@@ -1,11 +1,11 @@
 # ffmpeg - http://ffmpeg.org/download.html
 #
-# From https://trac.ffmpeg.org/wiki/CompilationGuide/Centos
+# From https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
 #
 # https://hub.docker.com/r/jrottenberg/ffmpeg/
 #
 #
-FROM        centos:7
+FROM        atty/opencv-3.1.0:ubuntu
 MAINTAINER  Julien Rottenberg <julien@rottenberg.info>
 
 
@@ -14,7 +14,7 @@ ENTRYPOINT  ["ffmpeg"]
 WORKDIR     /tmp/workdir
 
 
-ENV         FFMPEG_VERSION=3.1.10     \
+ENV         FFMPEG_VERSION=2.8.12     \
             FDKAAC_VERSION=0.1.5      \
             LAME_VERSION=3.99.5       \
             LIBASS_VERSION=0.13.7     \  
@@ -47,28 +47,28 @@ ARG         FRIBIDI_SHA256SUM="08222a6212bbc2276a2d55c3bf370109ae4a35b689acbc665
 
 ARG         LD_LIBRARY_PATH=${SRC}/lib
 
-RUN     buildDeps="autoconf \
-                   automake \
-                   bzip2 \
-                   cmake \
-                   expat-devel \
-                   gcc \
-                   gcc-c++ \
-                   git \
-                   gperf \
-                   libtool \
-                   make \
-                   nasm \
-                   perl \
-                   openssl-devel \
-                   tar \
-                   yasm \
-                   which \
-                   zlib-devel" && \
+RUN      buildDeps="autoconf \
+                    automake \
+                    cmake \
+                    curl \
+                    bzip2 \
+                    libexpat1-dev \
+                    g++ \
+                    gcc \
+                    git \
+                    gperf \
+                    libtool \
+                    make \
+                    nasm \
+                    perl \
+                    pkg-config \
+                    python \
+                    libssl-dev \
+                    yasm \
+                    zlib1g-dev" && \
         export MAKEFLAGS="-j$(($(nproc) + 1))" && \
-        echo "${SRC}/lib" > /etc/ld.so.conf.d/libc.conf && \
-        yum --enablerepo=extras install -y epel-release libgomp expat && \
-        yum install -y ${buildDeps} libgomp1 && \
+        apt-get -yqq update && \
+        apt-get install -yq --no-install-recommends ${buildDeps} ca-certificates libgomp1 expat && \
 #RUN  \
 ## opencore-amr https://sourceforge.net/projects/opencore-amr/
         DIR=$(mktemp -d) && cd ${DIR} && \
@@ -276,10 +276,13 @@ RUN     buildDeps="autoconf \
         cp qt-faststart ${SRC}/bin && \
         rm -rf ${DIR} && \
 
-# cleanup
+## cleanup
         cd && \
-        yum history -y undo last && yum clean all && \
-        rm -rf /var/lib/yum/* && \
+        apt-get purge -y ${buildDeps} && \
+        apt-get autoremove -y && \
+        apt-get clean -y && \
+        rm -rf /var/lib/apt/lists && \
+        ldconfig && \
         ffmpeg -buildconf
 
 # Let's make sure the app built correctly
